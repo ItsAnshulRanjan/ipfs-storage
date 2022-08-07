@@ -23,9 +23,9 @@ const Dashboard = () => {
     if (reason === "clickaway") {
       return;
     }
-
     setSnackbarOpen(false);
   };
+
   const handleSubmit = (event) => {
     const form = event.currentTarget;
     event.preventDefault();
@@ -39,7 +39,7 @@ const Dashboard = () => {
       setShowEncPhrase(false);
       // Send the file to the server with the encPhrase
       setSnackbarOpen(true);
-      //   storeFile(file, encPhrase);
+      storeFile(file, encPhrase);
     }
   };
   const handleClick = (event) => {
@@ -50,6 +50,28 @@ const Dashboard = () => {
     const file = fileInput.files[0];
     setFile(file);
     setShowEncPhrase(true);
+  }
+  function storeFile(file, encPhrase) {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("key", encPhrase);
+
+    return new Promise((resolve, reject) => {
+      fetch("http://127.0.0.1:5000/upload", {
+        method: "POST",
+        body: formData,
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          console.log("Data is ", data);
+          resolve(data);
+          setShowUploadSuccess(true);
+        })
+        .catch((err) => {
+          console.log("Error is ", err);
+          reject(err);
+        });
+    });
   }
 
   return (
@@ -75,7 +97,7 @@ const Dashboard = () => {
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={3000}
-        onClose={() => setShowUploadSuccess(false)}
+        onClose={() => setSnackbarOpen(false)}
       >
         <Alert
           onClose={handleSnackBarClose}
@@ -85,6 +107,19 @@ const Dashboard = () => {
           File selected successfully!
         </Alert>
       </Snackbar>
+      <Snackbar
+          open={showUploadSuccess}
+          autoHideDuration={3000}
+          onClose={() => setShowUploadSuccess(false)}
+        >
+          <Alert
+            onClose={handleSnackBarClose}
+            severity="success"
+            sx={{ width: "100%" }}
+          >
+            File uploaded successfully!
+          </Alert>
+        </Snackbar>
       <Modal
         show={showEncPhrase}
         onHide={() => {
