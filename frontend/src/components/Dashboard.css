@@ -1,0 +1,29 @@
+.empty-container{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 70vh;
+    margin-top: 5vh;
+}
+.empty{
+    overflow: hidden;
+}
+.text-container{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 5vh;
+    padding: 2em;
+}
+input{
+    text-decoration: none;
+}
+.text-container a{
+    text-decoration: none;
+    color: black
+}
+.text-container a:hover{
+    text-decoration: underline;
+    color: #90CAF9;
+    cursor: pointer;
+}
