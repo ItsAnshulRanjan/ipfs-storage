@@ -117,6 +117,20 @@ db = firebase.database()
 #         return render_template("login.html")
 
 
+@app.route("/files",methods=["GET"])
+def getFiles():
+    if request.method=="GET":
+        if "UserId" in session:
+                
+            d=db.child(session["UserID"]).get().val()
+            lis={}
+            c=0
+            for i in d:
+                lis[c]=i.replace(",",".")
+                c=c+1
+            return lis
+        else:
+            return "login first"
 @app.route("/register", methods=["POST"])
 def registerUser():
     if request.method == "POST":
