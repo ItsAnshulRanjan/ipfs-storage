@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, session, redirect
+from flask import Flask, render_template, request, session, redirect, send_file
 import pyrebase
 import json
 import subprocess
@@ -11,31 +11,36 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 import bcrypt
 from flask_cors import CORS, cross_origin
-
+import time
 
 app = Flask(__name__)
 # ALlow cross origin requests
 app.config["CORS_HEADERS"] = "Content-Type"
 cors = CORS(app, resources={r"/upload": {"origins": "http://localhost:3000"}})
 
-def verify_hash(hash,passwd):
-    ohash=hash
-    salt=hash.split("$$")[0].encode()
+
+def verify_hash(hash, passwd):
+    ohash = hash
+    salt = hash.split("$$")[0].encode()
     kdf = PBKDF2HMAC(
-    algorithm=hashes.SHA256(),
-    length=32,
-    salt=salt,
-    iterations=390000,
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=salt,
+        iterations=390000,
     )
-    key = base64.urlsafe_b64encode(kdf.derive(passwd.encode()+app.secret_key.encode('utf-8')))
-    hash =salt+"$$".encode()+bcrypt.hashpw(key,salt)
-    print(hash,ohash)
-    if hash==ohash.encode():
-        return True,key
+    key = base64.urlsafe_b64encode(
+        kdf.derive(passwd.encode() + app.secret_key.encode("utf-8"))
+    )
+    hash = salt + "$$".encode() + bcrypt.hashpw(key, salt)
+    print(hash, ohash)
+    if hash == ohash.encode():
+        return True, key
     else:
-        return False,0
+        return False, 0
+
 
 def encrypting(password, pepper):
+    print("Encrypting")
     bytes = password.encode("utf-8")
     salt = bcrypt.gensalt()
     print(salt)
@@ -62,9 +67,8 @@ def encrypt_file(filedata, key, filename):
 
 def decrypt_file(filename, key):
     fernet = Fernet(key)
-    print(app.config["uploadFolder"] + filename + "\\" + filename)
     encrypted = open(
-        app.config["uploadFolder"] + "encrypted_" + filename + "\\" + filename, "rb"
+        app.config["uploadFolder"] + "encrypted_" + filename + "/" + filename, "rb"
     ).read()
     decrypted = fernet.decrypt(encrypted)
     a = open(app.config["uploadFolder"] + "decrypted" + filename, "wb")
@@ -139,29 +143,44 @@ def registerUser():
         auth.send_email_verification(out["idToken"])
 
         return "verify email sent"
-    
-@app.route("/verify",methods=["POST"])
-def download():
-    if request.method=="POST":
-                
-            passwd=request.form.get("password")
-            filename=request.form.get("filename").replace(".",",")
-            
-            
-            users=db.get().val()
-            if session["UserID"] in users:
 
-                cid=db.child(session["UserID"]).child(filename).child("data").get().val()[-1]
-                shash=db.child(session["UserID"]).child(filename).child("data").get().val()[0]
-                check,key=verify_hash(shash,passwd)
-                if check:
-                    file=filename.replace(",",".")
-                    os.system("w3 get {} -o {}".format(cid,app.config["uploadFolder"]+"encrypted_"+file))
-                    decrypt_file(file,key)
-                    file="decrypted"+filename.replace(",",".")
-                    return send_file("./UploadFiles/{}".format(file),as_attachment=True)
-                else:
-                    return "not verified"
+
+@app.route("/verify", methods=["POST"])
+@cross_origin(origin="localhost", headers=["Content- Type", "Authorization"])
+def download():
+    session["UserID"] = "test"
+    if request.method == "POST":
+
+        passwd = request.form.get("password")
+        filename = request.form.get("filename").replace(".", ",")
+
+        users = db.get().val()
+        if session["UserID"] in users:
+
+            cid = (
+                db.child(session["UserID"])
+                .child(filename)
+                .child("data")
+                .get()
+                .val()[-1]
+            )
+            shash = (
+                db.child(session["UserID"]).child(filename).child("data").get().val()[0]
+            )
+            check, key = verify_hash(shash, passwd)
+            if check:
+                file = filename.replace(",", ".")
+                os.system(
+                    "w3 get {} -o {}".format(
+                        cid, app.config["uploadFolder"] + "encrypted_" + file
+                    )
+                )
+                decrypt_file(file, key)
+                file = "decrypted" + filename.replace(",", ".")
+                return {"status": 200}
+            else:
+                return {"status": 400}
+
 
 @app.route("/upload", methods=["GET", "POST"])
 @cross_origin(origin="localhost", headers=["Content- Type", "Authorization"])
@@ -169,19 +188,35 @@ def uploadToServer():
     session["UserID"] = "test"
     session["UserName"] = "test"
     if request.method == "POST":
+        print("uploading")
         files = request.files.get("file")
-
+        # print("Time taken to get files: ", new_time - Time) Most Time
         secretKey = request.form.get("key")
-
         filename = secure_filename(files.filename)
         filedata = files.read()
         key, hash = encrypting(secretKey, app.secret_key)
         encrypt_file(filedata, key, filename)
+        print("Encrypted")
+        t1 = time.time()
         upload_file(
             os.path.join(app.config["uploadFolder"], filename),
             hash,
         )
+        t2 = time.time()
+        print("Time taken to upload: ", t2 - t1)
         return {"status": "success"}
+
+
+@app.route("/download/<file>", methods=["POST", "GET"])
+@cross_origin(origin="localhost", headers=["Content- Type", "Authorization"])
+def send_download(file):
+    if request.method == "GET":
+        print("Sending: " + app.config["uploadFolder"] + "decrypted" + file)
+        return send_file(
+            app.config["uploadFolder"] + "decrypted" + file,
+            as_attachment=True,
+            attachment_filename=file,
+        )
 
 
 @app.route("/login", methods=["POST"])
