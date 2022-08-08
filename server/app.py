@@ -11,7 +11,13 @@ app=Flask(__name__)
 
 app.secret_key=("97417099682342342wererewrwr")
 config={
-
+"apiKey":"AIzaSyCzeZb62c_LyBLVSGwMMiVWJ8frHp9dKi4",
+    "authDomain":"test-ipfs-8d946.firebaseapp.com",
+    "projectId":"test-ipfs-8d946",
+    "storageBucket":"test-ipfs-8d946.appspot.com",
+    "messagingSenderId":"72753508870",
+    "appId":"1:72753508870:web:52d51c4f54bf06a83f4987",
+    "databaseURL":"https://test-ipfs-8d946-default-rtdb.asia-southeast1.firebasedatabase.app/"
 }
 
 firebase=pyrebase.initialize_app(config)
