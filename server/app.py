@@ -62,7 +62,9 @@ def upload_file(file,hash):
                 db.child(session["UserID"]).child(filename).set(data)
 
                 
-app.secret_key=("97417099682342342wererewrwr")
+app.secret_key=("cre=ebrorU#Ipr&b#gibapreyAqlmLwufof+7ipo4uJa@rozi2")
+app.config["uploadFolder"]=r"path to upload folder"
+config={
 config={
 "apiKey":"AIzaSyCzeZb62c_LyBLVSGwMMiVWJ8frHp9dKi4",
     "authDomain":"test-ipfs-8d946.firebaseapp.com",
