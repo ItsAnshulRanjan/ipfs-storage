@@ -13,10 +13,10 @@ import bcrypt
 from flask_cors import CORS, cross_origin
 
 
-
 app = Flask(__name__)
-CORS(app)
-
+# ALlow cross origin requests
+app.config["CORS_HEADERS"] = "Content-Type"
+cors = CORS(app, resources={r"/upload": {"origins": "http://localhost:3000"}})
 
 
 def encrypting(password, pepper):
@@ -126,7 +126,7 @@ def registerUser():
 
 
 @app.route("/upload", methods=["GET", "POST"])
-
+@cross_origin(origin="localhost", headers=["Content- Type", "Authorization"])
 def uploadToServer():
     session["UserID"] = "test"
     session["UserName"] = "test"

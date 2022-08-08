@@ -1,0 +1,14 @@
+.encryption-loading-container {
+display: flex;
+justify-content: center;
+align-items: center;
+height: 100vh;
+background-color: #90CAF9;
+}
+
+@media screen and (max-width: 768px) {
+    .encryption-loading{
+        width: 90%;
+    }
+    
+}
