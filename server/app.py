@@ -18,6 +18,22 @@ app = Flask(__name__)
 app.config["CORS_HEADERS"] = "Content-Type"
 cors = CORS(app, resources={r"/upload": {"origins": "http://localhost:3000"}})
 
+def verify_hash(hash,passwd):
+    ohash=hash
+    salt=hash.split("$$")[0].encode()
+    kdf = PBKDF2HMAC(
+    algorithm=hashes.SHA256(),
+    length=32,
+    salt=salt,
+    iterations=390000,
+    )
+    key = base64.urlsafe_b64encode(kdf.derive(passwd.encode()+app.secret_key.encode('utf-8')))
+    hash =salt+"$$".encode()+bcrypt.hashpw(key,salt)
+    print(hash,ohash)
+    if hash==ohash.encode():
+        return True,key
+    else:
+        return False,0
 
 def encrypting(password, pepper):
     bytes = password.encode("utf-8")
@@ -123,7 +139,29 @@ def registerUser():
         auth.send_email_verification(out["idToken"])
 
         return "verify email sent"
+    
+@app.route("/verify",methods=["POST"])
+def download():
+    if request.method=="POST":
+                
+            passwd=request.form.get("password")
+            filename=request.form.get("filename").replace(".",",")
+            
+            
+            users=db.get().val()
+            if session["UserID"] in users:
 
+                cid=db.child(session["UserID"]).child(filename).child("data").get().val()[-1]
+                shash=db.child(session["UserID"]).child(filename).child("data").get().val()[0]
+                check,key=verify_hash(shash,passwd)
+                if check:
+                    file=filename.replace(",",".")
+                    os.system("w3 get {} -o {}".format(cid,app.config["uploadFolder"]+"encrypted_"+file))
+                    decrypt_file(file,key)
+                    file="decrypted"+filename.replace(",",".")
+                    return send_file("./UploadFiles/{}".format(file),as_attachment=True)
+                else:
+                    return "not verified"
 
 @app.route("/upload", methods=["GET", "POST"])
 @cross_origin(origin="localhost", headers=["Content- Type", "Authorization"])
