@@ -274,7 +274,7 @@ def login():
         try:
             user=auth.sign_in_with_email_and_password(email,password)
         except:
-            return "failed to login"
+            return {"status":400}
         UserInfo=auth.get_account_info(user["idToken"])
         session["Verified"]=UserInfo["users"][0]["emailVerified"]
         if session["Verified"]:    
