@@ -9,6 +9,20 @@ import os
 import requests
 app=Flask(__name__)
 
+def encrypting(password, pepper):
+    bytes = password.encode('utf-8')
+    salt = bcrypt.gensalt()
+    print(salt)
+    kdf = PBKDF2HMAC(
+    algorithm=hashes.SHA256(),
+    length=32,
+    salt=salt,
+    iterations=390000,
+    )
+    key = base64.urlsafe_b64encode(kdf.derive(bytes+pepper.encode('utf-8')))
+    hash =salt+"$$".encode()+bcrypt.hashpw(key,salt)
+    return key, hash
+
 def encrypt_file(filedata,key,filename):
 
     fernet=Fernet(key)
