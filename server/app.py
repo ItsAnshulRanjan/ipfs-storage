@@ -9,6 +9,40 @@ import os
 import requests
 app=Flask(__name__)
 
+def encrypt_file(filedata,key,filename):
+
+    fernet=Fernet(key)
+    encrypted=fernet.encrypt(filedata)
+
+    a=open(app.config["uploadFolder"]+filename,"wb")
+    a.write(encrypted)
+    a.flush()
+    a.close()
+
+def decrypt_file(filename,key):
+    fernet=Fernet(key)
+    print(app.config["uploadFolder"]+filename+"\\"+filename)
+    encrypted=open(app.config["uploadFolder"]+"encrypted_"+filename+"\\"+filename,"rb").read()
+    decrypted=fernet.decrypt(encrypted)
+    a=open(app.config["uploadFolder"]+"decrypted"+filename,"wb")
+    a.write(decrypted)
+    a.flush()
+    a.close()
+    
+def upload_file(file,hash):
+                users=db.get().val()
+ 
+              
+                opp=subprocess.run(["w3","put" ,file],stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
+                filename=file.split("\\")[-1].replace(".",",")
+                filecid=opp.stdout.decode().split()[1]
+                print(filename,filecid)
+                data={
+                                "data":[hash.decode(),filecid]
+                            }
+                db.child(session["UserID"]).child(filename).set(data)
+
+                
 app.secret_key=("97417099682342342wererewrwr")
 config={
 "apiKey":"AIzaSyCzeZb62c_LyBLVSGwMMiVWJ8frHp9dKi4",
@@ -50,6 +84,20 @@ def registerUser():
         auth.send_email_verification(out["idToken"])
 
         return "verify email sent"
+@app.route("/upload",methods=['GET', 'POST'])
+def uploadToServer():
+    if request.method=="POST":
+        files=request.files.get("file")
+
+        secretKey=request.form.get("key")
+        
+        
+        filename=secure_filename(files.filename)
+        filedata=files.read()
+        key,hash=encrypting(secretKey,app.secret_key)
+        encrypt_file(filedata,key,filename)
+        upload_file(os.path.join(r"C:\Users\monish\Desktop\hackofest\UploadFiles",filename),hash)
+        return "uploaded"
 
 
 @app.route("/login",methods=["POST"])
@@ -67,12 +115,6 @@ def login():
         
 
         return "done"
-
-        
-
-
-
-                
 
 if __name__=="__main__":
     app.run(debug=True)
