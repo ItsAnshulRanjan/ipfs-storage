@@ -47,17 +47,82 @@ const Dashboard = () => {
   const handleClick = (event) => {
     hiddenFileInput.current.click();
   };
+
   function handleUpload(event) {
     const fileInput = document.querySelector('input[type="file"]');
     const file = fileInput.files[0];
     setFile(file);
     setShowEncPhrase(true);
   }
+
+  const downloadFileFromBlob = (blob, fileName) => {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    console.log("File URL is ", url);
+    a.download = fileName;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const getFile = (file) => {
+    // Get request to the server to get the file
+
+    console.log("GetFile called with file as ", file);
+
+    fetch(`http://127.0.0.1:5000/download/${file}`).then((response) => {
+      console.log("Response in get file ", response);
+      const a = document.createElement("a");
+      a.href = response.url;
+      a.download = file;
+      a.click();
+
+      window.URL.revokeObjectURL(response.url);
+      console.log("File downloaded");
+    });
+  };
+
+  const download = () => {
+    const downloadForm = new FormData();
+    downloadForm.append("password", "anirudhlakhotia");
+    downloadForm.append("filename", "Cloud.png");
+    return new Promise((resolve, reject) => {
+      fetch("http://127.0.0.1:5000/verify", {
+        method: "POST",
+        body: downloadForm,
+      }).then((response) => {
+        console.log("Response is ", response);
+        if (response.status === 200) {
+          console.log("File is available");
+          getFile("Cloud.png");
+        } else {
+          reject("Error");
+        }
+      });
+    });
+
+    //     .then((response) => {
+    //       console.log("REACHED HERE");
+    //       // time the process of downloading the file
+    //       let time = new Date();
+
+    //       response.blob().then((blob) => {
+    //         console.log(blob);
+    //         downloadFileFromBlob(blob, "Cloud.png");
+    //         console.log("Time taken to download " + (new Date() - time));
+    //       });
+    //     })
+    //     .catch((error) => {
+    //       reject(error);
+    //     });
+    // });
+  };
+
   function storeFile(file, encPhrase) {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("key", encPhrase);
-
+    let time = new Date();
     return new Promise((resolve, reject) => {
       fetch("http://127.0.0.1:5000/upload", {
         method: "POST",
@@ -68,6 +133,7 @@ const Dashboard = () => {
           console.log("Data is ", data);
           resolve(data);
           setEncrypting(false);
+          console.log("Time taken for upload is " + (new Date() - time));
           setShowUploadSuccess(true);
         })
         .catch((err) => {
@@ -181,6 +247,13 @@ const Dashboard = () => {
               </Button>
             </Modal.Footer>
           </Modal>
+          <div className="download-container flex align-center justify-center">
+            <h1 className="">
+              <a onClick={download} class="download">
+                Download
+              </a>
+            </h1>
+          </div>
         </>
       )}
       {encrypting && <EncryptionLoading />}
