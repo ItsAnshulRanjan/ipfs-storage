@@ -15,5 +15,4 @@ Our cloud storage solution brings together modern day web3 storage and IPFS toge
 * Huge cloud companies asks huge amount of money for unsafe storage solutions. We provide a much faster alternative with huge amount of free storage and all the files safely encrypted.
 * The web of tomorrow needs IPFS today. IPFS aims to surpass HTTP in order to build a better web for all of us. Today's web is inefficient and expensive. IPFS makes it possible to efficiently distribute high volumes of data without duplication.
 
-## Project link
-https://d856-49-206-15-29.ngrok.io/
+## For a minimalistic setup to test functionality [check this link](https://d856-49-206-15-29.ngrok.io/)
