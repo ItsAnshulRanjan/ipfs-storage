@@ -7,8 +7,7 @@
 Our cloud storage solution brings together modern day web3 storage and IPFS together to create a safe and reliable storage options for our users. Which is also encrypted giving a extra layer of protection to your files.
 
 ## Why is this so awesome? 🤩
-* 🔒 **Security** Each file on the machine is encrypted, and the encryption ke
-reliableys are stored protected by the user's password.We use symmetric bcrypt encryption algorithm before storing it to the server making it very secure against data breach.
+* 🔒 **Security** Each file on the machine is encrypted, and the encryption keys are stored protected by the user's password.We use symmetric bcrypt encryption algorithm before storing it to the server making it very secure against data breach.
 * 🌐 **Decentralized** With Web3.Storage you get all the benefits of decentralized storage technologies with the frictionless experience you expect in a modern dev workflow.
 * 📁 **Access your Data** Files stored on IPFS are resistant to tampering and censorship. IPFS powers the creation of diversely resilient networks that enable persistent availability — with or without internet backbone connectivity
 
