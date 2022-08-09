@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, session, redirect, send_file
+from flask import Flask, render_template, request, redirect, send_file
+
 import pyrebase
 import json
 import subprocess
@@ -12,11 +13,16 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 import bcrypt
 from flask_cors import CORS, cross_origin
 import time
+from flask_session import Session
 
 app = Flask(__name__)
 # ALlow cross origin requests
 app.config["CORS_HEADERS"] = "Content-Type"
 cors = CORS(app, resources={r"/upload": {"origins": "http://localhost:3000"}})
+SESSION_TYPE = "filesystem"
+app.config.from_object(__name__)
+Session(app)
+CORS(app)
 
 
 def verify_hash(hash, passwd):
@@ -77,7 +83,7 @@ def decrypt_file(filename, key):
     a.close()
 
 
-def upload_file(file, hash):
+def upload_file(file, hash, session):
     users = db.get().val()
 
     opp = subprocess.run(
@@ -90,9 +96,17 @@ def upload_file(file, hash):
     db.child(session["UserID"]).child(filename).set(data)
 
 
+def getCookies(cookiestring):
+    cookie = {}
+    a = cookiestring[:-1].split(";")
+    for i in a:
+        cookie[i.split("=")[0]] = i.split("=")[-1]
+
+    return cookie
+
+
 app.secret_key = "cre=ebrorU#Ipr&b#gibapreyAqlmLwufof+7ipo4uJa@rozi2"
 app.config["uploadFolder"] = "uploads/"
-
 
 config = {
     "apiKey": "AIzaSyCzeZb62c_LyBLVSGwMMiVWJ8frHp9dKi4",
@@ -117,21 +131,29 @@ db = firebase.database()
 #         return render_template("login.html")
 
 
-@app.route("/files",methods=["GET"])
+@app.route("/files", methods=["POST"])
+@cross_origin(origin="localhost", headers=["Content- Type", "Authorization"])
 def getFiles():
-    if request.method=="GET":
-        if "UserId" in session:
-                
-            d=db.child(session["UserID"]).get().val()
-            lis={}
-            c=0
+    if request.method == "POST":
+        session = getCookies(request.headers["Authorization"])
+        print("INSIDE FILES\n", session)
+        if "UserID" in session:
+
+            d = db.child(session["UserID"]).get().val()
+            lis = {}
+            lis["files"] = []
             for i in d:
-                lis[c]=i.replace(",",".")
-                c=c+1
-            return lis
+                lis["files"].append(i.replace(",", "."))
+
+            print("LIS IS\n", lis)
+
+            return {"status": 200, "data": lis}
         else:
-            return {"status":400}
+            return {"status": 400}
+
+
 @app.route("/register", methods=["POST"])
+@cross_origin(origin="localhost", headers=["Content- Type", "Authorization"])
 def registerUser():
     if request.method == "POST":
         username = request.form.get("username")
@@ -156,134 +178,152 @@ def registerUser():
         out = request_object.json()
         auth.send_email_verification(out["idToken"])
 
-        return {"status":200}
-@app.route("/logout")
-def logout():
-    if "UserID" in session:
-            d=db.child(session["UserID"]).get().val()
-            for i in d:
-                i=i.replace(",",".")
-                if os.path.exists(os.path.join(app.config["uploadFolder"],i,i)):
-                        os.remove(os.path.join(app.config["uploadFolder"],i,i))
+        return {"status": 200}
 
-                if os.path.exists(os.path.join(app.config["uploadFolder"],i)):
-                    os.rmdir(os.path.join(app.config["uploadFolder"],i))
-                if os.path.exists(os.path.join(app.config["uploadFolder"],"decrypted"+i)):
-                        os.remove(os.path.join(app.config["uploadFolder"],"decrypted"+i))
-            session.pop("UserID",None)
-            session.pop("UserName",None)
-            return {"status":200}
+
+@app.route("/logout")
+@cross_origin(origin="localhost", headers=["Content- Type", "Authorization"])
+def logout():
+    session = getCookies(request.header["Authorization"])
+    if "UserID" in session:
+        d = db.child(session["UserID"]).get().val()
+        for i in d:
+            i = i.replace(",", ".")
+            if os.path.exists(os.path.join(app.config["uploadFolder"], i, i)):
+                os.remove(os.path.join(app.config["uploadFolder"], i, i))
+
+            if os.path.exists(os.path.join(app.config["uploadFolder"], i)):
+                os.rmdir(os.path.join(app.config["uploadFolder"], i))
+            if os.path.exists(
+                os.path.join(app.config["uploadFolder"], "decrypted" + i)
+            ):
+                os.remove(os.path.join(app.config["uploadFolder"], "decrypted" + i))
+        session.pop("UserID", None)
+        session.pop("UserName", None)
+        return {"status": 200}
     else:
-        return {"status":400}
+        return {"status": 400}
+
 
 @app.route("/verify", methods=["POST"])
 @cross_origin(origin="localhost", headers=["Content- Type", "Authorization"])
 def download():
     session["UserID"] = "test"
     if request.method == "POST":
-    
-            if "UserID" in session:
-            
+        session = getCookies(request.header["Authorization"])
+        if "UserID" in session:
 
-                passwd = request.form.get("password")
-                filename = request.form.get("filename").replace(".", ",")
+            passwd = request.form.get("password")
+            filename = request.form.get("filename").replace(".", ",")
 
-                users = db.get().val()
-                if session["UserID"] in users:
+            users = db.get().val()
+            if session["UserID"] in users:
 
-                    cid = (
-                        db.child(session["UserID"])
-                        .child(filename)
-                        .child("data")
-                        .get()
-                        .val()[-1]
-                    )
-                    shash = (
-                        db.child(session["UserID"]).child(filename).child("data").get().val()[0]
-                    )
-                    check, key = verify_hash(shash, passwd)
-                    if check:
-                        file = filename.replace(",", ".")
-                        session["allowed_files"].append(file)
-                        os.system(
-                            "w3 get {} -o {}".format(
-                                cid, app.config["uploadFolder"] + "encrypted_" + file
-                            )
+                cid = (
+                    db.child(session["UserID"])
+                    .child(filename)
+                    .child("data")
+                    .get()
+                    .val()[-1]
+                )
+                shash = (
+                    db.child(session["UserID"])
+                    .child(filename)
+                    .child("data")
+                    .get()
+                    .val()[0]
+                )
+                check, key = verify_hash(shash, passwd)
+                if check:
+                    file = filename.replace(",", ".")
+                    session["allowed_files"].append(file)
+                    os.system(
+                        "w3 get {} -o {}".format(
+                            cid, app.config["uploadFolder"] + "encrypted_" + file
                         )
-                        decrypt_file(file, key)
-                        file = "decrypted" + filename.replace(",", ".")
-                        return {"status": 200}
-                    else:
-                        return {"status": 400}
-            else:
-                return {"status": 400}
-             
+                    )
+                    decrypt_file(file, key)
+                    file = "decrypted" + filename.replace(",", ".")
+                    return {"status": 200}
+                else:
+                    return {"status": 400}
+        else:
+            return {"status": 400}
 
 
 @app.route("/upload", methods=["GET", "POST"])
 @cross_origin(origin="localhost", headers=["Content- Type", "Authorization"])
-def uploadToServer():               
+def uploadToServer():
     if request.method == "POST":
-                if "UserID" in session:
-                        
-                    print("uploading")
-                    files = request.files.get("file")
-                    # print("Time taken to get files: ", new_time - Time) Most Time
-                    secretKey = request.form.get("key")
-                    filename = secure_filename(files.filename)
-                    filedata = files.read()
-                    key, hash = encrypting(secretKey, app.secret_key)
-                    encrypt_file(filedata, key, filename)
-                    print("Encrypted")
-                    t1 = time.time()
-                    upload_file(
-                        
-                        os.path.join(app.config["uploadFolder"], filename),
-                        hash,
-                    )
-                    t2 = time.time()
-                    print("Time taken to upload: ", t2 - t1)
-                    return {"status": "success"}
-                else:
-                    return {"status":400}
+        session = getCookies(request.header["Authorization"])
+
+        if "UserID" in session:
+
+            print("uploading")
+            files = request.files.get("file")
+            # print("Time taken to get files: ", new_time - Time) Most Time
+            secretKey = request.form.get("key")
+            filename = secure_filename(files.filename)
+            filedata = files.read()
+            key, hash = encrypting(secretKey, app.secret_key)
+            encrypt_file(filedata, key, filename)
+            print("Encrypted")
+            t1 = time.time()
+            upload_file(
+                os.path.join(app.config["uploadFolder"], filename), hash, session
+            )
+            t2 = time.time()
+            print("Time taken to upload: ", t2 - t1)
+            return {"status": "success"}
+        else:
+            return {"status": 400}
 
 
 @app.route("/download/<file>", methods=["POST", "GET"])
 @cross_origin(origin="localhost", headers=["Content- Type", "Authorization"])
 def send_download(file):
     if request.method == "GET":
+        session = getCookies(request.header["Authorization"])
         if "UserID" in session:
-                if file in session["allowed_files"]:
-                            
-                        print("Sending: " + app.config["uploadFolder"] + "decrypted" + file)
-                        return send_file(
-                            app.config["uploadFolder"] + "decrypted" + file,
-                            as_attachment=True,
-                            attachment_filename=file,
-                        )
-                else:
-                    return {"status":400}
+            if file in session["allowed_files"]:
+
+                print("Sending: " + app.config["uploadFolder"] + "decrypted" + file)
+                return send_file(
+                    app.config["uploadFolder"] + "decrypted" + file,
+                    as_attachment=True,
+                    attachment_filename=file,
+                )
+            else:
+                return {"status": 400}
         else:
-            return {"status":400}
+            return {"status": 400}
 
 
 @app.route("/login", methods=["POST"])
+@cross_origin(
+    origin="localhost",
+    headers=["Content- Type", "Authorization"],
+    supports_credentials=True,
+)
 def login():
-        email=request.form.get("email")
-        password=request.form.get("password")
-        try:
-            user=auth.sign_in_with_email_and_password(email,password)
-        except:
-            return {"status":400}
-        UserInfo=auth.get_account_info(user["idToken"])
-        session["Verified"]=UserInfo["users"][0]["emailVerified"]
-        if session["Verified"]:    
-                session["UserName"]=user["displayName"]
-                session["UserID"]=UserInfo["users"][0]["localId"]
-                session["allowed_files"]=[]
-                return {"status":200}
-        else:
-            return {"status":400}
+    email = request.form.get("email")
+    password = request.form.get("password")
+    try:
+        user = auth.sign_in_with_email_and_password(email, password)
+    except:
+        return {"status": 400}
+    UserInfo = auth.get_account_info(user["idToken"])
+    Verified = UserInfo["users"][0]["emailVerified"]
+    if Verified:
+
+        return {
+            "status": 200,
+            "UserName": user["displayName"],
+            "UserID": UserInfo["users"][0]["localId"],
+            "verified": UserInfo["users"][0]["emailVerified"],
+        }
+    else:
+        return {"status": 400}
 
 
 if __name__ == "__main__":

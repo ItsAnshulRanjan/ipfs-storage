@@ -3,7 +3,7 @@
     align-items: center;
     justify-content: center;
     height: 70vh;
-    /* margin-top: 5vh; */
+    margin-top: 5vh;
 }
 .empty{
     overflow: hidden;

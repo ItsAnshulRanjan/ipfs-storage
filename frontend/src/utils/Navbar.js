@@ -6,11 +6,11 @@ function Nav() {
   const [isOpen, setIsOpen] = useState(false);
   return (
     <div>
-      <nav className="fixed z-10 h-full bg-slate-100 sm-bg-transparent shadow-xl flex-col">
+      <nav className="z-10 fixed h-full bg-transparent shadow-lg flex-col">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-0 py-2">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
-              <div className="hidden md:block">
+              <div className="hidden">
                 <div className="flex space-x-4 flex-col align-center justify-center mt-48">
                   <NavLink
                     style={({ isActive }) => {
@@ -20,7 +20,7 @@ function Nav() {
                       };
                     }}
                     to="/"
-                    className="text-black hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-lg font-medium"
+                    className="text-black hover:bg-[#90CAF9] hover:text-white px-3 py-2 rounded-md text-lg font-medium"
                   >
                     Home
                   </NavLink>
@@ -32,7 +32,7 @@ function Nav() {
                       };
                     }}
                     to="/events"
-                    className="text-black hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-lg font-medium"
+                    className="text-black hover:bg-[#90CAF9] hover:text-white px-3 py-2 rounded-md text-lg font-medium"
                   >
                     Events
                   </NavLink> */}
@@ -44,7 +44,7 @@ function Nav() {
                       };
                     }}
                     to="/events"
-                    className="text-black hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-lg font-medium"
+                    className="text-black hover:bg-[#90CAF9] hover:text-white px-3 py-2 rounded-md text-lg font-medium"
                   >
                     Events
                   </NavLink>
@@ -57,7 +57,7 @@ function Nav() {
                       };
                     }}
                     to="/team"
-                    className="text-black hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-lg font-medium"
+                    className="text-black hover:bg-[#90CAF9] hover:text-white px-3 py-2 rounded-md text-lg font-medium"
                   >
                     Team
                   </NavLink>
@@ -70,7 +70,7 @@ function Nav() {
                       };
                     }}
                     to="/spotlight"
-                    className="text-black hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-lg font-medium"
+                    className="text-black hover:bg-[#90CAF9] hover:text-white px-3 py-2 rounded-md text-lg font-medium"
                   >
                     Spotlight
                   </NavLink> */}
@@ -83,7 +83,7 @@ function Nav() {
                       };
                     }}
                     to="/spotlight"
-                    className="text-black hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-lg font-medium"
+                    className="text-black hover:bg-[#90CAF9] hover:text-white px-3 py-2 rounded-md text-lg font-medium"
                   >
                     Spotlight
                   </NavLink>
@@ -96,14 +96,14 @@ function Nav() {
                       };
                     }}
                     to="/contact"
-                    className="text-black hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-lg font-medium"
+                    className="text-black hover:bg-[#90CAF9] hover:text-white px-3 py-2 rounded-md text-lg font-medium"
                   >
                     Contact Us
                   </NavLink>
                 </div>
               </div>
             </div>
-            <div className="-mr-2 flex md:hidden">
+            <div className="-mr-2 flex">
               <button
                 onClick={() => setIsOpen(!isOpen)}
                 type="button"
@@ -160,7 +160,7 @@ function Nav() {
           leaveTo="opacity-0 scale-95"
         >
           {(ref) => (
-            <div className="md:hidden" id="mobile-menu">
+            <div className="md" id="mobile-menu">
               <div ref={ref} className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
                 <NavLink
                   onClick={() => setIsOpen(!isOpen)}
@@ -171,7 +171,7 @@ function Nav() {
                     };
                   }}
                   to="/"
-                  className="text-black hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
+                  className="text-black hover:bg-[#90CAF9] hover:text-white block px-3 py-2 rounded-md text-base font-medium"
                 >
                   Home
                 </NavLink>
@@ -184,7 +184,7 @@ function Nav() {
                     };
                   }}
                   to="/events"
-                  className="text-black hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
+                  className="text-black hover:bg-[#90CAF9] hover:text-white block px-3 py-2 rounded-md text-base font-medium"
                 >
                   Events
                 </NavLink>
@@ -192,7 +192,7 @@ function Nav() {
                   href="https://codeofchaos.ieeecspesu.tech/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-black hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
+                  className="text-black hover:bg-[#90CAF9] hover:text-white block px-3 py-2 rounded-md text-base font-medium"
                 >
                   Events
                 </a> */}
@@ -205,7 +205,7 @@ function Nav() {
                     };
                   }}
                   to="/team"
-                  className="text-black hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
+                  className="text-black hover:bg-[#90CAF9] hover:text-white block px-3 py-2 rounded-md text-base font-medium"
                 >
                   Team
                 </NavLink>
@@ -219,7 +219,7 @@ function Nav() {
                     };
                   }}
                   to="/spotlight"
-                  className="text-black hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
+                  className="text-black hover:bg-[#90CAF9] hover:text-white block px-3 py-2 rounded-md text-base font-medium"
                 >
                   Spotlight
                 </NavLink>
@@ -233,7 +233,7 @@ function Nav() {
                     };
                   }}
                   to="/spotlight"
-                  className="text-black hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
+                  className="text-black hover:bg-[#90CAF9] hover:text-white block px-3 py-2 rounded-md text-base font-medium"
                 >
                   Spotlight
                 </NavLink> */}
@@ -247,7 +247,7 @@ function Nav() {
                     };
                   }}
                   to="/contact"
-                  className="text-black hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
+                  className="text-black hover:bg-[#90CAF9] hover:text-white block px-3 py-2 rounded-md text-base font-medium"
                 >
                   Contact Us
                 </NavLink>
